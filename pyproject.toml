@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "a mini game to visualize the path-finding algorithm"
 authors = ["anthony <mrchowpoor@gmail.com>"]
 license = "MIT"
+repository = "https://github.com/kiri-chow/kiri-walkgame"
 readme = "README.md"
 packages = [{include = "kiri_walkgame"}]
 
