@@ -21,9 +21,9 @@ class Kiri(Sprite):
 
     """
 
-    def __init__(self, size=40):
+    def __init__(self, size=40, fps=10):
         super().__init__()
-        self.__load_frames(size)
+        self.__load_frames(size, fps)
         self.rect = None
         self._frame_ind = 0
         self.__update_image()
@@ -67,9 +67,12 @@ class Kiri(Sprite):
             [(pos_x + delta_x * i, pos_y + delta_y * i)
              for i in range(speed, 0, -1)])
 
-    def __load_frames(self, size):
+    def __load_frames(self, size, fps):
+        ratio = fps // 10
         images = [pygame.transform.scale(pygame.image.load(x), (size, size))
                   for x in (SOURCES.kiri.stand, SOURCES.kiri.run)]
+        if ratio > 1:
+            images = sum([[i for _ in range(ratio)] for i in images], [])
         self.frames = tuple(images)
 
     def __update_image(self):

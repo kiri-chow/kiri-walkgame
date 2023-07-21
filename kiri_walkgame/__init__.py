@@ -9,7 +9,7 @@ Created on Tue Jul 18 11:23:42 2023
 from io import BytesIO
 import pygame
 import numpy as np
-from kiri_pathfinding.map_generator import COST_RATIOS, generate_map
+from kiri_pathfinding.map_generator import generate_map
 from kiri_pathfinding import PathFinding
 from kiri_walkgame.characters import Kiri
 from kiri_walkgame.shortcuts import SOURCES, equal_pos
@@ -17,6 +17,8 @@ from kiri_walkgame.output import map_to_png
 
 
 RATIO = 20
+COST_RATIOS = [5, 15, 20, 1]
+FPS = 20
 
 
 class Game:
@@ -34,6 +36,8 @@ class Game:
     def __init__(self, height=20, width=20, **kwargs):
         self.height, self.width = height * RATIO, width * RATIO
         self.__generate_map(height, width, **kwargs)
+        self.__stop = None
+        self.__queue = []
         self._reset()
         self.__init_character()
         self.__init_target()
@@ -42,8 +46,14 @@ class Game:
         self._waiting = False
         self.screen = None
 
+    @property
+    def _stopped(self):
+        "test if the game stopped"
+        return (any((x is None for x in (self.start, self.stop))) or
+                equal_pos(self.start, self.stop))
+
     def __init_character(self):
-        character = Kiri(self.__c_size)
+        character = Kiri(self.__c_size, FPS)
         self.__kiri = character
 
     def __init_target(self):
@@ -69,9 +79,19 @@ class Game:
         # game status
         self.start = None
         self.stop = None
-        self.__queue = []
+        self.__queue.clear()
         self.cost = 0
         self.expected_cost = 0
+
+    @property
+    def stop(self):
+        "the target point"
+        return self.__stop
+
+    @stop.setter
+    def stop(self, val):
+        self.__stop = val
+        self.__set_queue()
 
     def __draw_background(self, to_flip=True):
         self.screen.fill((255, 255, 255))
@@ -147,7 +167,8 @@ class Game:
             return
         if self.start is None:
             self.start = pixel
-        elif self.stop is None:
+        # elif self.stop is None or self._stopped:
+        else:
             self.stop = pixel
 
     def __check_pixel(self, pixel):
@@ -157,13 +178,12 @@ class Game:
 
     def __set_queue(self):
         "set queue to move"
-        if (len(self.__queue) == 0 and
-                all((x is not None for x in (self.start, self.stop)))):
-            self.__queue = PathFinding(self.map).find(
-                tuple(self.start), tuple(self.stop))[::-1]
+        if self._stopped or self.stop is None:
+            return
+        self.__queue = PathFinding(self.map).find(
+            tuple(self.start), tuple(self.stop))[::-1]
 
     def __on_loop(self):
-        self.__set_queue()
         if not self.__kiri.moving and len(self.__queue) > 0:
             self.start = self.__queue.pop()
         self.__move_kiri()
@@ -195,7 +215,7 @@ class Game:
                 self.__on_event(event)
             self.__on_loop()
             pre_rects = self.__on_render(pre_rects)
-            clock.tick(10)
+            clock.tick(FPS)
         self.__on_cleanup()
 
 
