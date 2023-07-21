@@ -40,4 +40,4 @@ jobs:
     - name: Build package
       run:  poetry build
     - name: Publish package
-      run: poetry publish -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+      run: poetry publish
