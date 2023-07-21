@@ -182,7 +182,7 @@ class Game:
         if self._stopped or self.stop is None:
             return
         self.__kiri.stop()
-        self.__queue = PathFinding(self.map).find(
+        self.__queue = PathFinding(self.map, cost_ratios=COST_RATIOS).find(
             tuple(self.start), tuple(self.stop))[:0:-1]
 
     def __on_loop(self):
