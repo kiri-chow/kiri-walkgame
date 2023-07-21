@@ -47,6 +47,7 @@ class Game:
         self._waiting = False
         self.screen = None
         self.__to_flip = False
+        self.__volume = True
 
     @property
     def _stopped(self):
@@ -69,6 +70,11 @@ class Game:
         self.__init_b_reset(width, height)
         self.__init_b_voice(width, height)
 
+    def __load_music(self):
+        pygame.mixer.music.load(SOURCES.audios.Fantasy_by_Pufino_on_freetouse_com)
+        pygame.mixer.music.play(loops=1)
+        pygame.mixer.music.set_volume(self.__volume)
+
     def __init_b_reset(self, width, height):
         position = (self.__margin, self.height + self.__margin * 2)
         button = Button(SOURCES.icons.refresh,
@@ -81,13 +87,17 @@ class Game:
         self._reset()
         self.__to_flip = True
 
+    def __e_volumn(self, *args, **kwargs):
+        self.__volume = not self.__volume
+        pygame.mixer.music.set_volume(self.__volume)
+
     def __init_b_voice(self, width, height):
         position = (self.__margin + self.width - width,
                     self.height + self.__margin * 2)
         button = Button(
             (SOURCES.icons.voice_on, SOURCES.icons.voice_off),
             position=position, size=(width, height),
-            action=None)
+            action=self.__e_volumn)
         self.__buttons.append(button)
 
     def __generate_map(self, height, width, **kwargs):
@@ -178,6 +188,7 @@ class Game:
         self.__draw_background()
         self.__draw_buttons()
         pygame.display.flip()
+        self.__load_music()
         self._running = True
 
     def __on_event(self, event):
