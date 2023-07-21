@@ -12,3 +12,8 @@ To play this game, you just need to click the map twice. The first clicking will
 ```shell
 python kiri_walkgame
 ```
+
+## Credits
+Music track: Fantasy by Pufino
+Source: https://freetouse.com/music
+Copyright Free Music for Video
