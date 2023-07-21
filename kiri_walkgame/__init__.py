@@ -11,7 +11,7 @@ import pygame
 import numpy as np
 from kiri_pathfinding.map_generator import generate_map
 from kiri_pathfinding import PathFinding
-from kiri_walkgame.characters import Kiri
+from kiri_walkgame.characters import Kiri, Button
 from kiri_walkgame.shortcuts import SOURCES, equal_pos
 from kiri_walkgame.output import map_to_png
 
@@ -40,11 +40,13 @@ class Game:
         self.__queue = []
         self.__init_character()
         self.__init_target()
+        self.__init_buttons()
         self._reset()
 
         self._running = False
         self._waiting = False
         self.screen = None
+        self.__to_flip = False
 
     @property
     def _stopped(self):
@@ -59,6 +61,34 @@ class Game:
     def __init_target(self):
         self.__target = pygame.transform.scale(
             pygame.image.load(SOURCES.box), (self.__c_size, self.__c_size))
+
+    def __init_buttons(self):
+        self.__buttons = []
+        height = self.__panel_size - self.__margin * 2
+        width = int(height * 2)
+        self.__init_b_reset(width, height)
+        self.__init_b_voice(width, height)
+
+    def __init_b_reset(self, width, height):
+        position = (self.__margin, self.height + self.__margin * 2)
+        button = Button(SOURCES.icons.refresh,
+                        position=position, size=(width, height),
+                        action=self.__e_reset)
+        self.__buttons.append(button)
+
+    def __e_reset(self, *args, **kwargs):
+        self.__generate_map(self.height // RATIO, self.width // RATIO)
+        self._reset()
+        self.__to_flip = True
+
+    def __init_b_voice(self, width, height):
+        position = (self.__margin + self.width - width,
+                    self.height + self.__margin * 2)
+        button = Button(
+            (SOURCES.icons.voice_on, SOURCES.icons.voice_off),
+            position=position, size=(width, height),
+            action=None)
+        self.__buttons.append(button)
 
     def __generate_map(self, height, width, **kwargs):
         self.map = generate_map(height, width, **kwargs)
@@ -82,6 +112,7 @@ class Game:
         self.__queue.clear()
         self.cost = 0
         self.expected_cost = 0
+        self.__kiri.reset()
 
     @property
     def stop(self):
@@ -93,12 +124,10 @@ class Game:
         self.__stop = val
         self.__set_queue()
 
-    def __draw_background(self, to_flip=True):
+    def __draw_background(self):
         self.screen.fill((255, 255, 255))
         map_position = (self.__margin, self.__margin)
         self.screen.blit(self.__img_bg, map_position)
-        if to_flip:
-            pygame.display.flip()
 
     def __draw_kiri(self):
         return self.__kiri.draw(self.screen)
@@ -146,7 +175,9 @@ class Game:
         pygame.display.set_icon(logo)
         pygame.display.set_caption("kiri walk game")
         self.screen = pygame.display.set_mode(self.__window_size)
-        self.__draw_background(True)
+        self.__draw_background()
+        self.__draw_buttons()
+        pygame.display.flip()
         self._running = True
 
     def __on_event(self, event):
@@ -155,9 +186,23 @@ class Game:
             return
         if self._waiting:
             return
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.__event_on_buttons(event)
         if event.type == pygame.MOUSEBUTTONUP:
             self.__set_start_stop(event)
             return
+
+    def __event_on_buttons(self, event):
+        for button in self.__buttons:
+            if button.on_event(event):
+                return True
+        return False
+
+    def __draw_buttons(self):
+        rects = []
+        for button in self.__buttons:
+            rects.append(button.draw(self.screen))
+        return rects
 
     def __set_start_stop(self, event):
         "set the start point and stop point"
@@ -192,15 +237,20 @@ class Game:
 
     def __on_render(self, pre_rects):
         rects = []
-        self.__draw_background(False)
+        self.__draw_background()
+        rects.extend(self.__draw_buttons())
         rects.append(self.__draw_target())
         rects.append(self.__draw_kiri())
 
         # kiri get into the box
         if equal_pos(self.start, self.stop) and not self.__kiri.moving:
             rects.append(self.__draw_target())
-
-        pygame.display.update(pre_rects + rects)
+        if self.__to_flip:
+            pygame.display.flip()
+            rects = [self.screen.get_rect()]
+            self.__to_flip = False
+        else:
+            pygame.display.update(pre_rects + rects)
         return rects
 
     def __on_cleanup(self):
