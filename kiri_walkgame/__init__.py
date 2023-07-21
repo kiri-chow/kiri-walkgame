@@ -84,12 +84,16 @@ class Game:
         return self.__kiri.draw(self.screen)
 
     def __move_kiri(self):
+        # refuse to control kiri when it is moving
         if self.start is None or self.__kiri.moving:
             return
+        # place kiri in a position
         if self.__kiri._current_pos is None:
             speed = 1
+        # move kiri to a new position
         else:
             speed = COST_RATIOS[self.map[tuple(self.start)]] * 3
+
         position = self.__c_pixel_to_position(self.__kiri, self.start)
         self.__kiri.move(position, speed)
 
@@ -100,6 +104,7 @@ class Game:
         return self.screen.blit(self.__target, position)
 
     def __c_pixel_to_position(self, character, pixel):
+        "return a adjust position for characters"
         position = self.__pixel_to_position(pixel)
         width, height = character.get_size()
         position = (position[0] - (width + RATIO) / 2, position[1] - height)
@@ -110,9 +115,11 @@ class Game:
         return [x * RATIO + self.__margin + RATIO for x in pixel][::-1]
 
     def __position_to_pixel(self, position):
+        "transform the position on the screen to the pixel on the map"
         return [(x - self.__margin) // RATIO for x in position][::-1]
 
     def on_init(self):
+        "init the game"
         pygame.init()
         logo = pygame.image.load(SOURCES.logo)
         pygame.display.set_icon(logo)
@@ -132,6 +139,7 @@ class Game:
             return
 
     def __set_start_stop(self, event):
+        "set the start point and stop point"
         if event.button != 1:
             return
         pixel = self.__position_to_pixel(event.pos)
@@ -143,10 +151,12 @@ class Game:
             self.stop = pixel
 
     def __check_pixel(self, pixel):
+        "test if the pixel still in the map"
         pixel = np.asarray(pixel)
         return np.all((pixel >= 0) & (pixel < self.map.shape))
 
     def __set_queue(self):
+        "set queue to move"
         if (len(self.__queue) == 0 and
                 all((x is not None for x in (self.start, self.stop)))):
             self.__queue = PathFinding(self.map).find(
@@ -163,8 +173,11 @@ class Game:
         self.__draw_background(False)
         rects.append(self.__draw_target())
         rects.append(self.__draw_kiri())
+
+        # kiri get into the box
         if equal_pos(self.start, self.stop) and not self.__kiri.moving:
             rects.append(self.__draw_target())
+
         pygame.display.update(pre_rects + rects)
         return rects
 

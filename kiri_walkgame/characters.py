@@ -14,6 +14,11 @@ class Kiri(Sprite):
     """
     module of the character: Kiri
 
+    params
+    ------
+    size : int,
+        the size of the image
+
     """
 
     def __init__(self, size=40):
@@ -36,12 +41,24 @@ class Kiri(Sprite):
         return len(self._queue) > 0
 
     def move(self, position, speed):
-        "move the character to the position in speed"
-        if self._current_pos is None:
+        """
+        move the character to the position in the given speed
+
+        params
+        ------
+        position : (int, int)
+            The target position
+        speed : int,
+            The quantity of moving steps.
+            The larger the given number, the slower the character moves.
+
+        """
+        # cases do not need to move
+        if self._current_pos is None or equal_pos(self._current_pos, position):
             self._current_pos = position
             return
-        if equal_pos(self._current_pos, position):
-            return
+
+        # divide the move into steps and put the halfway positions into queue
         delta_x, delta_y = [(x - y) / speed for x,
                             y in zip(position, self._current_pos)]
         self._to_flip = delta_x < 0
@@ -63,7 +80,7 @@ class Kiri(Sprite):
             self.rect = self.image.get_rect(center=self.rect.center)
 
     def update(self, *args, **kwargs):
-        "update the image"
+        "update the character image"
         if self.moving:
             self._frame_ind += 1
             self._frame_ind %= len(self.frames)
@@ -75,8 +92,10 @@ class Kiri(Sprite):
         "draw the character on screen"
         if self._current_pos is None:
             return None
+
         if self.moving:
             self._current_pos = self._queue.pop()
+
         self.update()
         image = self.image
         if self._to_flip:
