@@ -5,7 +5,7 @@ Created on Tue Jul 18 17:14:13 2023
 
 @author: Anthony Chow
 
-Shortcuts to access sources
+Shortcuts to access sources or some useful functions
 
 """
 
@@ -59,3 +59,7 @@ def equal_pos(pos1, pos2):
     if not all((isinstance(x, Iterable) for x in (pos1, pos2))):
         return False
     return all((x == y for x, y in zip(pos1, pos2)))
+
+def in_rect(pos, rect):
+    "test if the pos in rect"
+    return all((a < x < a + b for x, (a, b) in zip(pos, zip(rect[:2], rect[2:]))))
