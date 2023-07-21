@@ -40,6 +40,10 @@ class Kiri(Sprite):
         "the character is moving or not"
         return len(self._queue) > 0
 
+    def stop(self):
+        "stop the move and clean the queue"
+        self._queue.clear()
+
     def move(self, position, speed):
         """
         move the character to the position in the given speed

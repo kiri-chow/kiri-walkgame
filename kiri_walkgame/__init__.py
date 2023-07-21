@@ -38,9 +38,9 @@ class Game:
         self.__generate_map(height, width, **kwargs)
         self.__stop = None
         self.__queue = []
-        self._reset()
         self.__init_character()
         self.__init_target()
+        self._reset()
 
         self._running = False
         self._waiting = False
@@ -107,6 +107,7 @@ class Game:
         # refuse to control kiri when it is moving
         if self.start is None or self.__kiri.moving:
             return
+
         # place kiri in a position
         if self.__kiri._current_pos is None:
             speed = 1
@@ -180,8 +181,9 @@ class Game:
         "set queue to move"
         if self._stopped or self.stop is None:
             return
+        self.__kiri.stop()
         self.__queue = PathFinding(self.map).find(
-            tuple(self.start), tuple(self.stop))[::-1]
+            tuple(self.start), tuple(self.stop))[:0:-1]
 
     def __on_loop(self):
         if not self.__kiri.moving and len(self.__queue) > 0:
