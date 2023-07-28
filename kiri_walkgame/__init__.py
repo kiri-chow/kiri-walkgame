@@ -38,6 +38,7 @@ class Game:
         self.__generate_map(height, width, **kwargs)
         self.__stop = None
         self.__queue = []
+        self.__channel = None
         self.__init_character()
         self.__init_target()
         self.__init_buttons()
@@ -70,9 +71,25 @@ class Game:
         self.__init_b_reset(width, height)
         self.__init_b_voice(width, height)
 
-    def __load_music(self):
-        pygame.mixer.music.load(SOURCES.audios.Fantasy_by_Pufino_on_freetouse_com)
-        pygame.mixer.music.play(loops=1)
+    def __init_meow(self):
+        self.__meow = pygame.mixer.Sound(SOURCES.audios.meow)
+        self.__channel = pygame.mixer.find_channel()
+
+    def __play_meow(self):
+        if self.__channel is None:
+            return
+        self.__stop_meow()
+        self.__channel.play(self.__meow, loops=-1)
+
+    def __stop_meow(self):
+        if self.__channel is None:
+            return
+        self.__channel.fadeout(2)
+
+    def __play_music(self):
+        pygame.mixer.music.load(
+            SOURCES.audios.Fantasy_by_Pufino_on_freetouse_com)
+        pygame.mixer.music.play(loops=-1)
         pygame.mixer.music.set_volume(self.__volume)
 
     def __init_b_reset(self, width, height):
@@ -90,6 +107,7 @@ class Game:
     def __e_volumn(self, *args, **kwargs):
         self.__volume = not self.__volume
         pygame.mixer.music.set_volume(self.__volume)
+        self.__channel.set_volume(self.__volume)
 
     def __init_b_voice(self, width, height):
         position = (self.__margin + self.width - width,
@@ -133,6 +151,7 @@ class Game:
     def stop(self, val):
         self.__stop = val
         self.__set_queue()
+        self.__play_meow()
 
     def __draw_background(self):
         self.screen.fill((255, 255, 255))
@@ -188,7 +207,8 @@ class Game:
         self.__draw_background()
         self.__draw_buttons()
         pygame.display.flip()
-        self.__load_music()
+        self.__play_music()
+        self.__init_meow()
         self._running = True
 
     def __on_event(self, event):
@@ -242,9 +262,14 @@ class Game:
             tuple(self.start), tuple(self.stop))[:0:-1]
 
     def __on_loop(self):
+        # next point
         if not self.__kiri.moving and len(self.__queue) > 0:
             self.start = self.__queue.pop()
         self.__move_kiri()
+
+        # kiri reach the point
+        if self._stopped and not self.__kiri.moving:
+            self.__stop_meow()
 
     def __on_render(self, pre_rects):
         rects = []
