@@ -10,7 +10,7 @@ To play this game, you just need to click the map twice. The first clicking will
 ## Usage
 
 ```shell
-python kiri_walkgame
+kiri_walkgame -s 20
 ```
 
 ## Credits

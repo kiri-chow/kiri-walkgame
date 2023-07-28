@@ -7,6 +7,8 @@ Created on Tue Jul 18 11:23:42 2023
 
 """
 from io import BytesIO
+import argparse
+import sys
 import pygame
 import numpy as np
 from kiri_pathfinding.map_generator import generate_map
@@ -33,9 +35,10 @@ class Game:
 
     __c_size = RATIO * 2  # character's size
 
-    def __init__(self, height=20, width=20, **kwargs):
-        self.height, self.width = height * RATIO, width * RATIO
-        self.__generate_map(height, width, **kwargs)
+    def __init__(self, size=20, width=None, **kwargs):
+        size, width = self.__init_args(size, width)
+        self.height, self.width = size * RATIO, width * RATIO
+        self.__generate_map(size, width, **kwargs)
         self.__stop = None
         self.__queue = []
         self.__channel = None
@@ -49,6 +52,13 @@ class Game:
         self.screen = None
         self.__to_flip = False
         self.__volume = True
+
+    @staticmethod
+    def __init_args(size, width):
+        if width is None:
+            width = size
+        assert isinstance(size, int) and isinstance(width, int)
+        return size, width
 
     @property
     def _stopped(self):
@@ -307,6 +317,23 @@ class Game:
         self.__on_cleanup()
 
 
+def init_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--size', required=False,
+                        help='Height of the map, the default is 20.',
+                        default=20, type=int)
+    parser.add_argument('-w', '--width', required=False,
+                        help='Width of the map, the default is same as @size',
+                        default=None, type=int)
+    return parser.parse_args(sys.argv[1:])
+
+
+def main():
+    "Execute"
+    args = init_args()
+    game = Game(args.size, args.width)
+    game.on_run()
+
+
 if __name__ == '__main__':
-    game = Game()
-    screen = game.on_run()
+    main()
